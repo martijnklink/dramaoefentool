@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drama Oefentool - VMBO-T</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@400;700&display=swap');
+
+        @keyframes curtainReveal {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes spotlight {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: #1a0812;
+            background-image: 
+                radial-gradient(ellipse at 50% 30%, rgba(139, 0, 0, 0.4), transparent 60%),
+                linear-gradient(180deg, #1a0812 0%, #2d0a1a 50%, #1a0812 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #f5f5f5;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -30%;
+            left: 50%;
+            width: 100%;
+            height: 150%;
+            background: radial-gradient(ellipse, rgba(218, 165, 32, 0.12) 0%, transparent 60%);
+            animation: spotlight 5s ease-in-out infinite;
+            pointer-events: none;
+            transform: translateX(-50%);
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B0000 0%, #B8860B 100%);
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(218, 165, 32, 0.25), 0 0 40px rgba(139, 0, 0, 0.3);
+            border: 2px solid rgba(218, 165, 32, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🎭';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 52px;
+            opacity: 0.25;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            color: #FFD700;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            color: #f5e6d3;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(0,0,0,0.4);
+            height: 10px;
+            border-radius: 6px;
+            margin-top: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(218, 165, 32, 0.3);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #DAA520, #FFD700, #DAA520);
+            background-size: 200% 100%;
+            animation: shimmer 2.5s linear infinite;
+            height: 100%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.85), rgba(70, 0, 0, 0.85));
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4), 0 0 0 1px rgba(218, 165, 32, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pop 0.4s ease;
+            border: 1px solid rgba(218, 165, 32, 0.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 20px rgba(218, 165, 32, 0.4);
+            border-color: rgba(218, 165, 32, 0.5);
+        }
+
+        .card h3 {
+            font-family: 'Playfair Display', serif;
+            color: #FFD700;
+            margin-bottom: 12px;
+            font-size: 21px;
+            font-weight: 700;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .card p {
+            color: #f5e6d3;
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #DAA520;
+            border: 1px solid rgba(218, 165, 32, 0.25);
+            font-weight: 600;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #8B0000, #B8860B);
+            color: #FFFFFF;
+            border: 2px solid #DAA520;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 16px rgba(218, 165, 32, 0.3);
+            font-family: 'Lato', sans-serif;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(218, 165, 32, 0.5);
+            border-color: #FFD700;
+        }
+
+        .button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: rgba(139, 0, 0, 0.6);
+            border-color: rgba(139, 0, 0, 0.8);
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: rgba(139, 0, 0, 0.8);
+        }
+
+        .back-button {
+            background: rgba(0, 0, 0, 0.6);
+            color: #DAA520;
+            border-color: rgba(218, 165, 32, 0.3);
+            padding: 12px 20px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .practice-mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .mode-card {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.75), rgba(70, 0, 0, 0.75));
+            border-radius: 14px;
+            padding: 22px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(218, 165, 32, 0.25);
+            backdrop-filter: blur(8px);
+        }
+
+        .mode-card:hover {
+            border-color: #DAA520;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 28px rgba(218, 165, 32, 0.35);
+        }
+
+        .mode-card h4 {
+            font-family: 'Playfair Display', serif;
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .mode-card p {
+            font-size: 13px;
+            color: #f5e6d3;
+            line-height: 1.4;
+        }
+
+        .flashcard {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.9), rgba(70, 0, 0, 0.9));
+            border: 2px solid #DAA520;
+            border-radius: 16px;
+            padding: 45px 35px;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 30px rgba(218, 165, 32, 0.2);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            padding: 45px 35px;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            color: #FFD700;
+            margin-bottom: 24px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+            font-weight: 900;
+        }
+
+        .flashcard p {
+            font-size: 18px;
+            line-height: 1.7;
+            color: #f5e6d3;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: #DAA520;
+            margin-top: 24px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .choice-button {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.5), rgba(70, 0, 0, 0.5));
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: left;
+            animation: pop 0.3s ease;
+            color: #f5e6d3;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .choice-button:hover:not(.disabled) {
+            border-color: #DAA520;
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.7), rgba(70, 0, 0, 0.7));
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(218, 165, 32, 0.25);
+        }
+
+        .choice-button.correct {
+            border-color: #4caf50;
+            background: linear-gradient(145deg, rgba(76, 175, 80, 0.35), rgba(56, 142, 60, 0.35));
+            animation: bounce 0.6s ease;
+        }
+
+        .choice-button.incorrect {
+            border-color: #f44336;
+            background: linear-gradient(145deg, rgba(244, 67, 54, 0.35), rgba(211, 47, 47, 0.35));
+            animation: shake 0.5s ease;
+        }
+
+        .choice-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .score {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.75), rgba(70, 0, 0, 0.75));
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item .label {
+            font-size: 12px;
+            color: #DAA520;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-item .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+
+        .drag-list {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.6), rgba(70, 0, 0, 0.6));
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .drag-item {
+            background: rgba(139, 0, 0, 0.4);
+            border: 2px solid #DAA520;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: move;
+            user-select: none;
+            transition: all 0.2s;
+            color: #f5e6d3;
+        }
+
+        .drag-item:hover {
+            background: rgba(139, 0, 0, 0.6);
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+        }
+
+        .result-card {
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.9), rgba(70, 0, 0, 0.9));
+            border: 2px solid #DAA520;
+            border-radius: 16px;
+            padding: 35px;
+            text-align: center;
+            margin: 22px 0;
+            animation: pop 0.6s ease;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 30px rgba(218, 165, 32, 0.2);
+        }
+
+        .result-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: #FFD700;
+            font-size: 48px;
+            margin-bottom: 18px;
+            font-weight: 900;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.8);
+        }
+
+        .result-card p {
+            font-size: 18px;
+            color: #f5e6d3;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .emoji {
+            font-size: 80px;
+            margin-bottom: 22px;
+            animation: bounce 1s ease infinite;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            background: rgba(26, 8, 18, 0.8);
+            color: #f5e6d3;
+            border-radius: 12px;
+            font-size: 16px;
+            margin: 12px 0;
+            transition: all 0.25s ease;
+            font-family: 'Lato', sans-serif;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #DAA520;
+            background: rgba(26, 8, 18, 0.95);
+            box-shadow: 0 0 18px rgba(218, 165, 32, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(218, 165, 32, 0.45);
+        }
+
+        @media (max-width: 480px) {
+            .practice-mode-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 26px;
+            }
+            
+            .flashcard {
+                min-height: 280px;
+                padding: 35px 25px;
+            }
+
+            .flashcard h2 {
+                font-size: 26px;
+            }
+
+            .flashcard p {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // DATA STRUCTURE - Hoofdstuk 1
+        const chapterData = {
+            title: "Hoofdstuk 1: Algemeen",
+            sections: [
+                {
+                    id: "functies",
+                    title: "Functies van drama",
+                    items: [
+                        {
+                            term: "Amuseren",
+                            definition: "Het raken van het publiek (zodat het geamuseerd wordt), door bijvoorbeeld het spelen van een sketch of een komische scène/toneelstuk. Het doel is om mensen te laten lachen, te ontroeren of simpelweg een goede tijd te laten hebben."
+                        },
+                        {
+                            term: "Informeren/Leren",
+                            definition: "Het publiek van nieuwe kennis of nieuwe informatie voorzien. Het doel is om mensen beter te laten begrijpen hoe iets werkt of wat er aan de hand is."
+                        },
+                        {
+                            term: "Overtuigen",
+                            definition: "De mening, houding of gedrag van het publiek proberen te veranderen door argumenten of bewijs te geven."
+                        }
+                    ]
+                },
+                {
+                    id: "spanningsopbouw",
+                    title: "Spanningsopbouw",
+                    hasOrder: true,
+                    orderSequence: ["Expositie", "Motorisch moment", "Ontwikkeling", "Climax", "Afloop"],
+                    orderTitle: "Noem alle stappen van spanningsopbouw",
+                    orderRequiresSequence: true,
+                    items: [
+                        {
+                            term: "Expositie",
+                            definition: "De introductie en/of uiteenzetting, meestal in dialoogvorm, van de situatie en de verschillende personages."
+                        },
+                        {
+                            term: "Motorisch moment",
+                            definition: "Dit is het punt in een toneelstuk of oefening waarop een belangrijke actie plaatsvindt die het verhaal echt op gang brengt. Hierna is er geen weg meer terug."
+                        },
+                        {
+                            term: "Ontwikkeling",
+                            definition: "Dit verwijst naar de manier waarop een verhaal evolueert gedurende het toneelstuk."
+                        },
+                        {
+                            term: "Climax",
+                            definition: "Dit is het hoogtepunt van het verhaal waar de spanning en emoties het sterkst zijn. Alle belangrijke conflicten komen tot een hoogtepunt."
+                        },
+                        {
+                            term: "Afloop",
+                            definition: "Dit is het deel van het toneelstuk dat volgt na de climax, waarin de losse eindjes worden samengebracht en het verhaal tot een einde komt."
+                        },
+                        {
+                            term: "(Dramatisch) Conflict",
+                            definition: "Meestal een tegenstelling (strijd/spanning) tussen verschillende personages of binnen een personage (innerlijk conflict). Een conflict roept altijd spanning op."
+                        },
+                        {
+                            term: "Cliffhanger",
+                            definition: "Spannend moment aan het eind van een scène of aflevering van een televisieserie, waardoor de kijker nieuwsgierig wordt naar het vervolg."
+                        },
+                        {
+                            term: "(Dramatische) Ontwikkeling",
+                            definition: "De verandering van de situatie binnen een toneelstuk door de handelingen van de personages."
+                        }
+                    ]
+                },
+                {
+                    id: "tekst",
+                    title: "Tekst",
+                    items: [
+                        {
+                            term: "Toneeltekst",
+                            definition: "Een tekst die ten grondslag ligt aan een theateruitvoering. Heeft meestal een herkenbare lay-out en bestaat uit hoofdtekst (dialogen en monologen) en neventekst (regieaanwijzingen)."
+                        },
+                        {
+                            term: "Script",
+                            definition: "De geprinte verzamelde tekst van een toneelstuk. Alle uitgeschreven scènes bij elkaar vormen het script."
+                        },
+                        {
+                            term: "Personage",
+                            definition: "De rol die je speelt."
+                        },
+                        {
+                            term: "Claus",
+                            definition: "(Ieder) stukje in een toneelstuk, die door één acteur achter elkaar uitgesproken wordt. Alle tekst die een personage zegt voordat een ander personage iets zegt."
+                        },
+                        {
+                            term: "Regieaanwijzing/Neventekst",
+                            definition: "Aanwijzing van de regisseur om de mise-en-scène beter te maken, of een aanwijzing die in de toneeltekst staat."
+                        },
+                        {
+                            term: "Bewerken",
+                            definition: "Het omzetten van het ene medium, bijvoorbeeld een boek, in het andere medium, bijvoorbeeld toneel of film."
+                        },
+                        {
+                            term: "Dialoog",
+                            definition: "Een (gespeelde) tekst of gesprek tussen twee of meer mensen."
+                        },
+                        {
+                            term: "Monoloog",
+                            definition: "Aaneengesloten (gespeelde) tekst waarin één persoon spreekt, dat tegen zichzelf of tot niemand van de medespelers gericht is."
+                        },
+                        {
+                            term: "Toneelschrijver",
+                            definition: "De schrijver van een toneelstuk."
+                        }
+                    ]
+                },
+                {
+                    id: "theatervormen",
+                    title: "Theatervormen",
+                    items: [
+                        {
+                            term: "Tragedie",
+                            definition: "Theatervorm die gaat over ernstige onderwerpen. Oudste theatervorm ter wereld. Gaat over helden/beroemde mensen, heeft meestal geen goede afloop.",
+                            tags: ["Ernstig", "Helden", "Slechte afloop", "Oudste vorm"]
+                        },
+                        {
+                            term: "Komedie/Blijspel",
+                            definition: "Een theatergenre waarin mensen en hun handelingen in het dagelijkse leven van de vrolijke of lachwekkende kant wordt voorgesteld. Heeft meestal een goede afloop.",
+                            tags: ["Vrolijk", "Dagelijks leven", "Goede afloop"]
+                        },
+                        {
+                            term: "Cabaret",
+                            definition: "Populaire vorm van theater, die meestal bestaat uit de combinatie van verhalen vertellen, grappen maken, theater, dans, zang en/of poëzie. Gaat altijd om verhalen met veel humor."
+                        },
+                        {
+                            term: "Clownerie",
+                            definition: "Een speelstijl waarin een clown voorkomt, meestal in de vorm van acts."
+                        },
+                        {
+                            term: "Maskerspel",
+                            definition: "Theater waarbij maskers worden gebruikt om iemand anders te spelen of zichzelf te verbergen."
+                        },
+                        {
+                            term: "Mime/Pantomime",
+                            definition: "Gebarenspel en/of bewegingstheater. Een theaterdiscipline waarbij alleen lichamelijke houding, gebaren en bewegingen worden getoond. Ook wel de kunst van de stilte genoemd."
+                        },
+                        {
+                            term: "Performance",
+                            definition: "Theatervorm waarin de maker zelf ook speelt in zijn voorstelling. Gaat vaak een combinatie aan met andere kunstvormen."
+                        },
+                        {
+                            term: "Poppenspel",
+                            definition: "Een theatervorm waarin poppen de plaats innemen van menselijke acteurs."
+                        },
+                        {
+                            term: "Danstheater",
+                            definition: "Theater waarin dans de boventoon voert. Meer dan alleen dans vertelt het een verhaal."
+                        },
+                        {
+                            term: "Montagetheater",
+                            definition: "Er is geen lopend verhaal van begin tot eind. De scènes zijn aan elkaar 'geplakt'/gemonteerd."
+                        },
+                        {
+                            term: "Schimmenspel",
+                            definition: "Theatervorm waarin de acteurs achter een doek figuren maken die door licht zichtbaar worden. Het publiek kijkt naar de schaduwen."
+                        },
+                        {
+                            term: "Slapstick",
+                            definition: "Een theatervorm of film met veel gooi- en smijtwerk, lawaai en platte komische grappen. Vaak erg fysiek."
+                        },
+                        {
+                            term: "Theatersport (Improtheater)",
+                            definition: "Vorm van theater waarbij improvisatiewedstrijden voor publiek worden gegeven. Er is geen vaste tekst."
+                        },
+                        {
+                            term: "Verteltheater",
+                            definition: "Theater waarin vooral een verhaal wordt verteld. Weinig poespas, maar acteurs op het toneel die het verhaal vertellen."
+                        },
+                        {
+                            term: "Muziektheater (Musical/Opera)",
+                            definition: "Theatervorm waarin muziek een grote rol heeft. In opera worden klassieke muziek en toneel gecombineerd. In musical wordt populaire muziek gebruikt."
+                        }
+                    ]
+                },
+                {
+                    id: "theatrale-middelen",
+                    title: "Theatrale middelen",
+                    hasOrder: true,
+                    orderSequence: ["Spelgegevens (5W's)", "Mise-en-scène", "Theatervormgevingsmiddelen"],
+                    orderTitle: "Noem alle 3 theatrale middelen",
+                    orderRequiresSequence: false,
+                    hasSecondOrder: true,
+                    secondOrderTitle: "Noem alle 8 vormgevingsmiddelen",
+                    secondOrderSequence: ["Decor", "Geluid", "Muziek", "Grime & Hairstyling", "Kostuums", "Licht", "Projecties", "Rekwisieten"],
+                    secondOrderRequiresSequence: false,
+                    items: [
+                        {
+                            term: "Spelgegevens (5W's)",
+                            definition: "De bouwstenen van een scène uitgebeeld door de acteurs: Wie (rol), Wat (actie en verhaal), Waar (ruimte/plaats), Wanneer (tijd), Waarom (motief)."
+                        },
+                        {
+                            term: "Mise-en-scène",
+                            definition: "De opstelling en beweging van de acteurs in de ruimte. Bestaat uit: plaatsing van personages, bewegen ten opzichte van elkaar, blikrichting/focus, en op- en afgaan."
+                        },
+                        {
+                            term: "Theatervormgevingsmiddelen",
+                            definition: "Alle niet levende onderdelen van een scène: decor, geluid, muziek, grime & hairstyling, kostuums, licht, projecties, rekwisieten."
+                        },
+                        {
+                            term: "Enscenering",
+                            definition: "Het totaal van alle theatrale middelen die een regisseur gebruikt om zijn voorstelling te maken."
+                        }
+                    ]
+                },
+                {
+                    id: "overige",
+                    title: "Overige begrippen",
+                    items: [
+                        {
+                            term: "Scène",
+                            definition: "Één deel van een voorstelling zonder wisseling van tijd en rollen. Het kleinste afgeronde stukje van een voorstelling."
+                        },
+                        {
+                            term: "Theatergezelschap",
+                            definition: "Een organisatie die toneelstukken maakt en produceert."
+                        },
+                        {
+                            term: "Toneelstuk",
+                            definition: "Een voorstelling die door acteurs op het toneel wordt opgevoerd. Van tevoren uitgeschreven door een toneelschrijver."
+                        },
+                        {
+                            term: "Speeltijd",
+                            definition: "De reële tijd, dus de feitelijke tijdsduur van de voorstelling."
+                        },
+                        {
+                            term: "Gespeelde tijd",
+                            definition: "De tijd die in het stuk of de scène wordt uitgebeeld. Kan langer of korter zijn dan de speeltijd."
+                        },
+                        {
+                            term: "Flashback",
+                            definition: "Scène die teruggaat naar het verleden."
+                        },
+                        {
+                            term: "Flashforward",
+                            definition: "Scène die vooruitspringt naar de toekomst."
+                        },
+                        {
+                            term: "(Maatschappelijk) Thema",
+                            definition: "Het onderwerp van een voorstelling. De gedachte achter een voorstelling."
+                        },
+                        {
+                            term: "Recenseren/Recensie",
+                            definition: "Het schrijven van een beoordelende tekst over een theatervoorstelling."
+                        },
+                        {
+                            term: "Tableau vivant",
+                            definition: "Een levend schilderij. Een 'bevroren' beeld van een situatie uitgebeeld door stilstaande spelers."
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // STORAGE FUNCTIONS
+        const getProgress = () => {
+            const saved = localStorage.getItem('dramaProgress');
+            return saved ? JSON.parse(saved) : {};
+        };
+
+        const saveProgress = (sectionId, correct, total) => {
+            const progress = getProgress();
+            if (!progress[sectionId]) {
+                progress[sectionId] = { correct: 0, total: 0 };
+            }
+            progress[sectionId].correct += correct;
+            progress[sectionId].total += total;
+            localStorage.setItem('dramaProgress', JSON.stringify(progress));
+        };
+
+        // SHUFFLE ARRAY
+        const shuffleArray = (array) => {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        };
+
+        // FUZZY MATCH - allows small typos and slash alternatives
+        const fuzzyMatch = (input, target) => {
+            const inputClean = input.toLowerCase().trim().replace(/[^\w\s\/]/g, '');
+            const targetClean = target.toLowerCase().trim().replace(/[^\w\s\/]/g, '');
+            
+            // Check if target has slash (e.g., "Mime/Pantomime")
+            if (targetClean.includes('/')) {
+                const parts = targetClean.split('/').map(p => p.trim());
+                // Accept if input matches either part
+                for (const part of parts) {
+                    const partNoSlash = part.replace(/\//g, '');
+                    const inputNoSlash = inputClean.replace(/\//g, '');
+                    if (calculateSimilarity(inputNoSlash, partNoSlash) >= 0.8) {
+                        return true;
+                    }
+                }
+            }
+            
+            // Standard comparison
+            const inputNoSlash = inputClean.replace(/\//g, '');
+            const targetNoSlash = targetClean.replace(/\//g, '');
+            
+            // Exact match
+            if (inputNoSlash === targetNoSlash) return true;
+            
+            // Fuzzy match
+            return calculateSimilarity(inputNoSlash, targetNoSlash) >= 0.8;
+        };
+
+        // Calculate Levenshtein similarity
+        const calculateSimilarity = (input, target) => {
+            const matrix = [];
+            for (let i = 0; i <= target.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= input.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= target.length; i++) {
+                for (let j = 1; j <= input.length; j++) {
+                    if (target[i - 1] === input[j - 1]) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            const distance = matrix[target.length][input.length];
+            const maxLength = Math.max(input.length, target.length);
+            return 1 - (distance / maxLength);
+        };
+
+        // HOME SCREEN
+        function HomeScreen({ onSelectSection }) {
+            const progress = getProgress();
+            
+            const calculateTotalProgress = () => {
+                let totalCorrect = 0;
+                let totalQuestions = 0;
+                Object.values(progress).forEach(p => {
+                    totalCorrect += p.correct;
+                    totalQuestions += p.total;
+                });
+                return totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Drama Oefentool</h1>
+                        <p>{chapterData.title}</p>
+                        <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${calculateTotalProgress()}%` }}></div>
+                        </div>
+                        <p style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
+                            Totale voortgang: {calculateTotalProgress()}%
+                        </p>
+                    </div>
+
+                    {chapterData.sections.map((section, index) => {
+                        const sectionProgress = progress[section.id];
+                        const percentage = sectionProgress && sectionProgress.total > 0
+                            ? Math.round((sectionProgress.correct / sectionProgress.total) * 100)
+                            : 0;
+                        
+                        const sectionEmojis = ['🎭', '📈', '📝', '🎬', '🎨', '⚙️'];
+                        const emoji = sectionEmojis[index] || '📚';
+
+                        return (
+                            <div key={section.id} className="card" onClick={() => onSelectSection(section)}>
+                                <h3>{emoji} {section.title}</h3>
+                                <p>{section.items.length} begrippen</p>
+                                <div className="stats">
+                                    <span className="stat">📊 {percentage}% correct</span>
+                                    {sectionProgress && (
+                                        <span className="stat">
+                                            {sectionProgress.correct}/{sectionProgress.total} vragen
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // MODE SELECTION
+        function ModeSelection({ section, onSelectMode, onBack }) {
+            const modes = [
+                { id: 'flashcards', title: 'Flashcards', description: 'Flip kaarten om te leren' },
+                { id: 'multiple', title: 'Multiple choice', description: 'Kies het juiste antwoord' },
+                { id: 'type', title: 'Type antwoord', description: 'Type de definitie' }
+            ];
+
+            if (section.hasOrder) {
+                modes.push({ 
+                    id: 'list', 
+                    title: section.orderTitle || 'Noem alle...', 
+                    description: section.orderRequiresSequence ? 'Let op de volgorde!' : 'Volgorde maakt niet uit'
+                });
+            }
+
+            if (section.hasSecondOrder) {
+                modes.push({ 
+                    id: 'list2', 
+                    title: section.secondOrderTitle || 'Noem alle...', 
+                    description: section.secondOrderRequiresSequence ? 'Let op de volgorde!' : 'Volgorde maakt niet uit'
+                });
+            }
+
+            return (
+                <div className="container">
+                    <button className="button back-button" onClick={onBack}>
+                        ← Terug
+                    </button>
+                    
+                    <div className="header">
+                        <h1>{section.title}</h1>
+                        <p>Kies een oefenvorm</p>
+                    </div>
+
+                    <div className="practice-mode-grid">
+                        {modes.map(mode => (
+                            <div 
+                                key={mode.id} 
+                                className="mode-card"
+                                onClick={() => onSelectMode(mode.id)}
+                            >
+                                <h4>{mode.title}</h4>
+                                <p>{mode.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // FLASHCARDS MODE
+        function FlashcardsMode({ section, onBack }) {
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isFlipped, setIsFlipped] = useState(false);
+            const [items] = useState(shuffleArray(section.items));
+
+            const currentItem = items[currentIndex];
+
+            const handleNext = () => {
+                setIsFlipped(false);
+                if (currentIndex < items.length - 1) {
+                    setCurrentIndex(currentIndex + 1);
+                }
+            };
+
+            const handlePrevious = () => {
+                setIsFlipped(false);
+                if (currentIndex > 0) {
+                    setCurrentIndex(currentIndex - 1);
+                }
+            };
+
+            return (
+                <div className="container">
+                    <button className="button back-button" onClick={onBack}>
+                        ← Terug
+                    </button>
+
+                    <div className="score">
+                        <div className="score-item">
+                            <div className="label">Kaart</div>
+                            <div className="value">{currentIndex + 1}/{items.length}</div>
+                        </div>
+                    </div>
+
+                    <div 
+                        className={`flashcard ${isFlipped ? 'flipped' : ''}`}
+                        onClick={() => setIsFlipped(!isFlipped)}
+                    >
+                        <div className="flashcard-front">
+                            <h2>Begrip</h2>
+                            <p>{currentItem.term}</p>
+                            <div className="hint">Klik om definitie te zien</div>
+                        </div>
+                        <div className="flashcard-back">
+                            <h2>Definitie</h2>
+                            <p>{currentItem.definition}</p>
+                            <div className="hint">Klik om begrip te zien</div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            className="button button-secondary" 
+                            onClick={handlePrevious}
+                            disabled={currentIndex === 0}
+                            style={{ opacity: currentIndex === 0 ? 0.5 : 1 }}
+                        >
+                            ← Vorige
+                        </button>
+                        <button 
+                            className="button" 
+                            onClick={handleNext}
+                            disabled={currentIndex === items.length - 1}
+                            style={{ opacity: currentIndex === items.length - 1 ? 0.5 : 1 }}
+                        >
+                            Volgende →
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // MULTIPLE CHOICE MODE
+        function MultipleChoiceMode({ section, onBack }) {
+            const [items] = useState(() => shuffleArray(section.items).slice(0, 10));
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [answered, setAnswered] = useState(false);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [isComplete, setIsComplete] = useState(false);
+
+            const currentItem = items[currentIndex];
+            
+            // Generate new choices for each question
+            const choices = (() => {
+                const allItems = section.items;
+                const wrongChoices = shuffleArray(
+                    allItems.filter(item => item.term !== currentItem.term)
+                ).slice(0, 3);
+                
+                return shuffleArray([
+                    currentItem.definition,
+                    ...wrongChoices.map(item => item.definition)
+                ]);
+            })();
+
+            const handleAnswer = (choice) => {
+                if (answered) return;
+                
+                setSelectedAnswer(choice);
+                setAnswered(true);
+                
+                const isCorrect = choice === currentItem.definition;
+                if (isCorrect) {
+                    setScore(score + 1);
+                }
+
+                setTimeout(() => {
+                    if (currentIndex < items.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                        setAnswered(false);
+                        setSelectedAnswer(null);
+                    } else {
+                        setIsComplete(true);
+                        saveProgress(section.id, score + (isCorrect ? 1 : 0), items.length);
+                    }
+                }, 1500);
+            };
+
+            const getButtonClass = (choice) => {
+                if (!answered) return 'choice-button';
+                if (choice === currentItem.definition) return 'choice-button correct';
+                if (choice === selectedAnswer) return 'choice-button incorrect';
+                return 'choice-button disabled';
+            };
+
+            if (isComplete) {
+                const percentage = Math.round((score / items.length) * 100);
+                const emoji = percentage >= 90 ? '🎉' : percentage >= 70 ? '🌟' : percentage >= 50 ? '👍' : '💪';
+                const message = percentage >= 90 ? 'Wow, perfectie!' : 
+                               percentage >= 70 ? 'Super goed!' : 
+                               percentage >= 50 ? 'Goed bezig!' : 
+                               'Blijf oefenen, het komt goed!';
+                
+                return (
+                    <div className="container">
+                        <button className="button back-button" onClick={onBack}>
+                            ← Terug naar overzicht
+                        </button>
+
+                        <div className="result-card">
+                            <div className="emoji">{emoji}</div>
+                            <h2>{percentage}%</h2>
+                            <p>{score} van de {items.length} goed</p>
+                            <p style={{ marginTop: '20px', color: '#667eea', fontSize: '20px', fontWeight: 'bold' }}>
+                                {message}
+                            </p>
+                        </div>
+
+                        <button className="button" onClick={onBack}>
+                            Klaar
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <button className="button back-button" onClick={onBack}>
+                        ← Terug
+                    </button>
+
+                    <div className="score">
+                        <div className="score-item">
+                            <div className="label">Vraag</div>
+                            <div className="value">{currentIndex + 1}/{items.length}</div>
+                        </div>
+                        <div className="score-item">
+                            <div className="label">Score</div>
+                            <div className="value">{score}</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h3>Wat is de definitie van:</h3>
+                        <h2 style={{ color: '#667eea', margin: '20px 0', fontSize: '24px' }}>
+                            {currentItem.term}
+                        </h2>
+
+                        {choices.map((choice, index) => (
+                            <button
+                                key={index}
+                                className={getButtonClass(choice)}
+                                onClick={() => handleAnswer(choice)}
+                            >
+                                {choice}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // COMPLETE LIST MODE - for memorizing complete lists
+        function CompleteListMode({ section, onBack, useSecondList }) {
+            const listItems = useSecondList ? section.secondOrderSequence : section.orderSequence;
+            const title = useSecondList ? section.secondOrderTitle : (section.orderTitle || "Rijtje");
+            const requiresSequence = useSecondList ? section.secondOrderRequiresSequence : section.orderRequiresSequence;
+            
+            const [answers, setAnswers] = useState(Array(listItems.length).fill(''));
+            const [isChecked, setIsChecked] = useState(false);
+            const [results, setResults] = useState([]);
+            const [score, setScore] = useState(0);
+
+            const handleAnswerChange = (index, value) => {
+                const newAnswers = [...answers];
+                newAnswers[index] = value;
+                setAnswers(newAnswers);
+                setIsChecked(false);
+            };
+
+            const checkAnswers = () => {
+                let newResults;
+                let correctCount;
+
+                if (requiresSequence) {
+                    // Check if answers match the exact sequence (with fuzzy matching)
+                    newResults = answers.map((answer, index) => {
+                        if (!answer.trim()) return 'empty';
+                        return fuzzyMatch(answer, listItems[index]) ? 'correct' : 'incorrect';
+                    });
+                    correctCount = newResults.filter(r => r === 'correct').length;
+                } else {
+                    // Check if all items are mentioned (order doesn't matter)
+                    newResults = answers.map((answer, index) => {
+                        if (!answer.trim()) return 'empty';
+                        const matchFound = listItems.some(item => fuzzyMatch(answer, item));
+                        return matchFound ? 'correct' : 'incorrect';
+                    });
+
+                    // Check for duplicates
+                    const filledAnswers = answers.filter(a => a.trim());
+                    const hasDuplicates = filledAnswers.some((answer, index) => {
+                        return filledAnswers.findIndex(a => 
+                            fuzzyMatch(a, answer)
+                        ) !== index;
+                    });
+
+                    correctCount = hasDuplicates ? 0 : newResults.filter(r => r === 'correct').length;
+                }
+                
+                setResults(newResults);
+                setScore(correctCount);
+                setIsChecked(true);
+                
+                saveProgress(section.id, correctCount, listItems.length);
+            };
+
+            const resetAnswers = () => {
+                setAnswers(Array(listItems.length).fill(''));
+                setIsChecked(false);
+                setResults([]);
+                setScore(0);
+            };
+
+            const getInputStyle = (index) => {
+                if (!isChecked) return {};
+                if (results[index] === 'correct') return { borderColor: '#4caf50', background: '#e8f5e9' };
+                if (results[index] === 'incorrect') return { borderColor: '#f44336', background: '#ffebee' };
+                return {};
+            };
+
+            const percentage = isChecked ? Math.round((score / listItems.length) * 100) : 0;
+
+            return (
+                <div className="container">
+                    <button className="button back-button" onClick={onBack}>
+                        ← Terug
+                    </button>
+
+                    <div className="header">
+                        <h1>{title}</h1>
+                        <p>{requiresSequence ? 'Vul in de juiste volgorde in' : 'Volgorde maakt niet uit'}</p>
+                    </div>
+
+                    <div style={{ background: 'white', borderRadius: '15px', padding: '25px', marginBottom: '15px' }}>
+                        {answers.map((answer, index) => (
+                            <div key={index} style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', color: '#666', fontSize: '14px' }}>
+                                    {requiresSequence ? `Stap ${index + 1}:` : `Item ${index + 1}:`}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={answer}
+                                    onChange={(e) => handleAnswerChange(index, e.target.value)}
+                                    placeholder={requiresSequence ? `Type stap ${index + 1}...` : `Type item ${index + 1}...`}
+                                    disabled={isChecked}
+                                    style={getInputStyle(index)}
+                                />
+                                {isChecked && results[index] === 'incorrect' && answer.trim() && (
+                                    <div style={{ fontSize: '12px', color: '#f44336', marginTop: '5px' }}>
+                                        {requiresSequence ? 'Dit is niet de juiste stap op deze plek' : 'Dit is geen item uit het rijtje'}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {isChecked && (
+                        <div className="result-card">
+                            <div className="emoji">
+                                {percentage === 100 ? '🎉' : percentage >= 70 ? '👍' : '💪'}
+                            </div>
+                            <h2>{score}/{listItems.length} correct</h2>
+                            <p style={{ marginTop: '15px', color: '#667eea', fontWeight: 'bold' }}>
+                                {percentage === 100 ? 'Perfect! Je kent het hele rijtje!' : 
+                                 percentage >= 70 ? 'Goed bezig!' : 'Blijf oefenen!'}
+                            </p>
+                            {percentage < 100 && (
+                                <div style={{ marginTop: '20px', padding: '15px', background: '#f0f0f0', borderRadius: '10px' }}>
+                                    <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                                        {requiresSequence ? 'De juiste volgorde:' : 'Het complete rijtje:'}
+                                    </p>
+                                    <p style={{ fontSize: '14px', color: '#333', fontWeight: 'bold' }}>
+                                        {listItems.join(', ')}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        {isChecked && (
+                            <button className="button button-secondary" onClick={resetAnswers}>
+                                Opnieuw proberen
+                            </button>
+                        )}
+                        <button 
+                            className="button" 
+                            onClick={isChecked ? onBack : checkAnswers}
+                            disabled={!isChecked && answers.every(a => !a.trim())}
+                            style={{ opacity: (!isChecked && answers.every(a => !a.trim())) ? 0.5 : 1 }}
+                        >
+                            {isChecked ? 'Klaar' : 'Controleer'}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // TYPE ANSWER MODE
+        function TypeAnswerMode({ section, onBack }) {
+            const [items] = useState(() => shuffleArray(section.items).slice(0, 10));
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [answer, setAnswer] = useState('');
+            const [score, setScore] = useState(0);
+            const [feedback, setFeedback] = useState(null);
+            const [isComplete, setIsComplete] = useState(false);
+
+            const currentItem = items[currentIndex];
+
+            const handleSubmit = () => {
+                const isCorrect = fuzzyMatch(answer, currentItem.term);
+                
+                setFeedback(isCorrect ? 'correct' : 'incorrect');
+                
+                if (isCorrect) {
+                    setScore(score + 1);
+                }
+
+                setTimeout(() => {
+                    if (currentIndex < items.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                        setAnswer('');
+                        setFeedback(null);
+                    } else {
+                        setIsComplete(true);
+                        saveProgress(section.id, score + (isCorrect ? 1 : 0), items.length);
+                    }
+                }, 2000);
+            };
+
+            if (isComplete) {
+                const percentage = Math.round((score / items.length) * 100);
+                const emoji = percentage >= 90 ? '🎉' : percentage >= 70 ? '🌟' : percentage >= 50 ? '👍' : '💪';
+                const message = percentage >= 90 ? 'Wow, perfectie!' : 
+                               percentage >= 70 ? 'Super goed!' : 
+                               percentage >= 50 ? 'Goed bezig!' : 
+                               'Blijf oefenen, het komt goed!';
+                
+                return (
+                    <div className="container">
+                        <button className="button back-button" onClick={onBack}>
+                            ← Terug naar overzicht
+                        </button>
+
+                        <div className="result-card">
+                            <div className="emoji">{emoji}</div>
+                            <h2>{percentage}%</h2>
+                            <p>{score} van de {items.length} goed</p>
+                            <p style={{ marginTop: '20px', color: '#667eea', fontSize: '20px', fontWeight: 'bold' }}>
+                                {message}
+                            </p>
+                        </div>
+
+                        <button className="button" onClick={onBack}>
+                            Klaar
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <button className="button back-button" onClick={onBack}>
+                        ← Terug
+                    </button>
+
+                    <div className="score">
+                        <div className="score-item">
+                            <div className="label">Vraag</div>
+                            <div className="value">{currentIndex + 1}/{items.length}</div>
+                        </div>
+                        <div className="score-item">
+                            <div className="label">Score</div>
+                            <div className="value">{score}</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h3>Welk begrip hoort bij deze definitie?</h3>
+                        <p style={{ fontSize: '16px', margin: '20px 0', lineHeight: '1.6' }}>
+                            {currentItem.definition}
+                        </p>
+
+                        <input
+                            type="text"
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            placeholder="Type je antwoord..."
+                            disabled={feedback !== null}
+                            onKeyPress={(e) => e.key === 'Enter' && !feedback && handleSubmit()}
+                        />
+
+                        {feedback && (
+                            <div style={{ 
+                                marginTop: '15px', 
+                                padding: '15px', 
+                                borderRadius: '10px',
+                                background: feedback === 'correct' ? '#e8f5e9' : '#ffebee',
+                                color: feedback === 'correct' ? '#2e7d32' : '#c62828'
+                            }}>
+                                {feedback === 'correct' ? (
+                                    '✅ Correct!'
+                                ) : (
+                                    <>❌ Het juiste antwoord is: <strong>{currentItem.term}</strong></>
+                                )}
+                            </div>
+                        )}
+
+                        <button 
+                            className="button" 
+                            onClick={handleSubmit}
+                            disabled={!answer || feedback !== null}
+                            style={{ opacity: (!answer || feedback !== null) ? 0.5 : 1 }}
+                        >
+                            Controleer
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // MAIN APP
+        function App() {
+            const [screen, setScreen] = useState('home');
+            const [selectedSection, setSelectedSection] = useState(null);
+            const [selectedMode, setSelectedMode] = useState(null);
+
+            const handleSelectSection = (section) => {
+                setSelectedSection(section);
+                setScreen('modes');
+            };
+
+            const handleSelectMode = (mode) => {
+                setSelectedMode(mode);
+                setScreen('practice');
+            };
+
+            const handleBack = () => {
+                if (screen === 'practice') {
+                    setScreen('modes');
+                    setSelectedMode(null);
+                } else if (screen === 'modes') {
+                    setScreen('home');
+                    setSelectedSection(null);
+                }
+            };
+
+            if (screen === 'home') {
+                return <HomeScreen onSelectSection={handleSelectSection} />;
+            }
+
+            if (screen === 'modes') {
+                return (
+                    <ModeSelection 
+                        section={selectedSection}
+                        onSelectMode={handleSelectMode}
+                        onBack={handleBack}
+                    />
+                );
+            }
+
+            if (screen === 'practice') {
+                if (selectedMode === 'flashcards') {
+                    return <FlashcardsMode section={selectedSection} onBack={handleBack} />;
+                }
+                if (selectedMode === 'multiple') {
+                    return <MultipleChoiceMode section={selectedSection} onBack={handleBack} />;
+                }
+                if (selectedMode === 'list') {
+                    return <CompleteListMode section={selectedSection} onBack={handleBack} useSecondList={false} />;
+                }
+                if (selectedMode === 'list2') {
+                    return <CompleteListMode section={selectedSection} onBack={handleBack} useSecondList={true} />;
+                }
+                if (selectedMode === 'type') {
+                    return <TypeAnswerMode section={selectedSection} onBack={handleBack} />;
+                }
+            }
+
+            return null;
+        }
+
+        // RENDER
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
